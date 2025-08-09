@@ -80,12 +80,12 @@ module "example-datadisk1" {
   name                 = "${var.example.name}-1"
   location             = var.location
   resource_group_name  = module.rg.resource_group_name
-  storage_account_type = var.cassandra_disk.storage_account_type
-  create_option        = var.cassandra_disk.create_option
-  disk_size_gb         = var.cassandra_disk.disk_size_gb
-  virtual_machine_id   = module.linux_vms["cassandra-vm1"].vm_id
-  lun                  = var.cassandra_disk.lun
-  caching              = var.cassandra_disk.caching
+  storage_account_type = var.example.storage_account_type
+  create_option        = var.example.create_option
+  disk_size_gb         = var.example.disk_size_gb
+  virtual_machine_id   = module.linux_vms["example-vm1"].vm_id
+  lun                  = var.example.lun
+  caching              = var.example.caching
 }
 
 module "private_service_nsg" {
@@ -213,4 +213,5 @@ module "jumpserver-vm1" {
   associate_nsg             = false
   tags = {}
 }
+
 
