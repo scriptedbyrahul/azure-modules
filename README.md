@@ -1,152 +1,76 @@
-## 📑 Module Documentation
+# 🚀 Terraform Modules for AKS and Azure Infrastructure
 
-Below are the **Inputs** and **Outputs** for each module.  
-When using them, set `source = "./modules/<module_name>"` in your Terraform code.
-
----
-
-### `aks_cluster`
-
-**Inputs:**
-
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `resource_group_name` | `string` | n/a | Resource group name |
-| `cluster_name` | `string` | n/a | AKS Cluster name |
-| `dns_prefix` | `string` | n/a | DNS prefix for AKS cluster |
-| `kubernetes_version` | `string` | `"1.27.3"` | Kubernetes version |
-| `network_plugin` | `string` | `"azure"` | Network plugin type |
-
-**Outputs:**
-
-| Name | Value | Description |
-|------|-------|-------------|
-| `aks_cluster_id` | `azurerm_kubernetes_cluster.aks.id` | The AKS cluster ID |
-| `kube_config` | `azurerm_kubernetes_cluster.aks.kube_config_raw` | Raw kubeconfig for connecting |
+This repository contains reusable **Terraform modules** for deploying and managing **Azure Kubernetes Service (AKS)** clusters, along with supporting resources like networking, storage, monitoring, and identity management.  
+Each module is designed to be **modular, composable, and production-ready**.
 
 ---
 
-### `vnet`
+## 📂 Modules Overview
 
-**Inputs:**
-
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `resource_group_name` | `string` | n/a | Resource group name |
-| `vnet_name` | `string` | n/a | Virtual Network name |
-| `address_space` | `list(string)` | n/a | List of address spaces |
-
-**Outputs:**
-
-| Name | Value | Description |
-|------|-------|-------------|
-| `vnet_id` | `azurerm_virtual_network.vnet.id` | Virtual Network ID |
+| Module Name           | Description |
+|-----------------------|-------------|
+| **aks_cluster**       | Provisions an AKS cluster with configurable node pools, authentication, and networking. |
+| **vnet**              | Creates Virtual Network (VNet) and subnets for AKS and related services. |
+| **acr**               | Deploys an Azure Container Registry for storing container images. |
+| **monitoring**        | Configures Azure Monitor and log analytics integration for AKS. |
+| **identity**          | Creates Azure Managed Identities for AKS and related services. |
+| **network_security**  | Sets up Network Security Groups (NSG) and rules for AKS and subnets. |
+| **dns_zone**          | Creates Azure DNS zones and records for AKS ingress endpoints. |
+| **storage_account**   | Creates Azure Storage Accounts for persistent storage and logging. |
 
 ---
 
-### `linux_vm`
+## 📌 Prerequisites
 
-**Inputs:**
+Before using these modules, ensure you have:
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `name` | `string` | n/a | VM name |
-| `resource_group_name` | `string` | n/a | Resource group |
-| `location` | `string` | `"eastus"` | Azure location |
-| `admin_username` | `string` | `"azureuser"` | Admin username |
-| `ssh_public_key` | `string` | n/a | SSH public key path |
-
-**Outputs:**
-
-| Name | Value | Description |
-|------|-------|-------------|
-| `vm_id` | `azurerm_linux_virtual_machine.vm.id` | Linux VM ID |
+- **Terraform v1.3+**
+- **Azure CLI**
+- An Azure subscription with sufficient permissions.
+- Proper authentication set up (Azure CLI logged in or service principal credentials).
 
 ---
 
-### `keyvault_reader`
+## 🛠️ Usage
 
-**Inputs:**
+You can combine modules in a **root Terraform configuration** like this:
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `key_vault_name` | `string` | n/a | Name of the Key Vault |
-| `object_id` | `string` | n/a | Object ID to grant access |
+```hcl
+provider "azurerm" {
+  features {}
+}
 
-**Outputs:**
+module "vnet" {
+  source              = "./modules/vnet"
+  name                = "aks-vnet"
+  resource_group_name = "aks-rg"
+  address_space       = ["10.0.0.0/8"]
+  subnets = {
+    aks     = ["10.240.0.0/16"]
+    backend = ["10.241.0.0/16"]
+  }
+}
 
-| Name | Value | Description |
-|------|-------|-------------|
-| `keyvault_id` | `azurerm_key_vault.kv.id` | Key Vault resource ID |
+module "acr" {
+  source              = "./modules/acr"
+  name                = "aksacr"
+  resource_group_name = "aks-rg"
+  sku                 = "Standard"
+}
 
----
-
-### `managed_disk`
-
-**Inputs:**
-
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `disk_name` | `string` | n/a | Managed Disk name |
-| `disk_size_gb` | `number` | n/a | Disk size in GB |
-| `resource_group_name` | `string` | n/a | Resource group |
-
-**Outputs:**
-
-| Name | Value | Description |
-|------|-------|-------------|
-| `disk_id` | `azurerm_managed_disk.disk.id` | Managed Disk ID |
-
----
-
-### `network_interface`
-
-**Inputs:**
-
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `nic_name` | `string` | n/a | Network Interface Card name |
-| `resource_group_name` | `string` | n/a | Resource group |
-| `subnet_id` | `string` | n/a | Subnet ID |
-
-**Outputs:**
-
-| Name | Value | Description |
-|------|-------|-------------|
-| `nic_id` | `azurerm_network_interface.nic.id` | NIC ID |
-
----
-
-### `network_security_group`
-
-**Inputs:**
-
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `nsg_name` | `string` | n/a | NSG name |
-| `resource_group_name` | `string` | n/a | Resource group |
-
-**Outputs:**
-
-| Name | Value | Description |
-|------|-------|-------------|
-| `nsg_id` | `azurerm_network_security_group.nsg.id` | NSG ID |
-
----
-
-### `public_ip`
-
-**Inputs:**
-
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `public_ip_name` | `string` | n/a | Public IP name |
-| `allocation_method` | `string` | `"Static"` | Allocation method |
-| `resource_group_name` | `string` | n/a | Resource group |
-
-**Outputs:**
-
-| Name | Value | Description |
-|------|-------|-------------|
-| `public_ip_id` | `azurerm_public_ip.pip.id` | Public IP resource ID |
-| `public_ip_address` | `azurerm_public_ip.pip.ip_address` | IP address value |
+module "aks_cluster" {
+  source              = "./modules/aks_cluster"
+  name                = "aks-prod"
+  resource_group_name = "aks-rg"
+  dns_prefix          = "aks"
+  kubernetes_version  = "1.29.0"
+  vnet_subnet_id      = module.vnet.subnet_ids["aks"]
+  acr_id              = module.acr.id
+  node_pools = [
+    {
+      name       = "system"
+      vm_size    = "Standard_DS2_v2"
+      node_count = 3
+    }
+  ]
+}
